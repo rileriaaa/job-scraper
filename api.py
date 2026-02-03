@@ -70,8 +70,25 @@ def indeed_jobs(title, location, total_jobs):
     
     return jobs
 
-def jobstreet_jobs():
-    pass
+def jobstreet_jobs(title, location, total_jobs):
+    jobs = []
+    page = 1
+    
+    encoded_title = title.replace(" ", "-")
+    encoded_location = location.replace(" ", "-")
+    
+    try:
+        while len(jobs) < total_jobs:
+            url  = f"https://ph.jobstreet.com/{encoded_title}-jobs/in-{encoded_location}?page={page}"
+
+            headers = {
+                
+            }
+        
+    except Exception as e:
+        return {'error': str(e)}
+    
+    return jobs
     
 @app.get('/')
 def home():
@@ -80,6 +97,14 @@ def home():
     }
     
 @app.get('/jobstreet/search')
+def tangina(title: str, location: str = "Metro Manila", total_jobs: int = 20):
+    jobs = jobstreet_jobs(title, location, total_jobs)
+    return {
+        'count': len(jobs),
+        'jobs': jobs
+    }
+    
+    
 
 @app.get('/indeed/search')
 def indeed(
