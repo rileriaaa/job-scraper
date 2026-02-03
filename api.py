@@ -69,6 +69,9 @@ def indeed_jobs(title, location, total_jobs):
         return {'error': str(e)}
     
     return jobs
+
+def jobstreet_jobs():
+    pass
     
 @app.get('/')
 def home():
