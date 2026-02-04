@@ -4,3 +4,9 @@ JobStreet Philippines
 RemoteOK 
 https://weworkremotely.com/
 https://wellfound.com/location/philippines
+
+fix weworkremotely
+
+<!-- notes -->
+use itemprop - less likely to change 
+class - changes most of the time and websites generates new classnames 

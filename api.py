@@ -147,13 +147,72 @@ def jobstreet_jobs(title, location, total_jobs):
             
             page += 1
             time.sleep(2)
+            
+        driver.quit()
+        return jobs
         
     except Exception as e:
         driver.quit()
         return {'error': str(e)}
     
-    driver.quit()
-    return jobs
+    
+
+
+def scrape_remoteok(search_term="", limit=20):
+    url = 'https://remoteok.com/remote-jobs'
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    
+    jobs = []
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        job_rows = soup.find_all('tr', class_='job')
+        
+        for row in job_rows:
+            try:
+                title_elem = row.find('h2', itemprop='title')
+                if not title_elem:
+                    continue
+                
+                title = title_elem.text.strip()
+                
+                if search_term and search_term.lower() not in title.lower():
+                    continue
+                
+                company_elem = row.find('h3', itemprop='name')
+                company = company_elem.text.strip() if company_elem else 'N/A'
+                
+                location_elem = row.find('div', class_='location')
+                location = location_elem.text.strip() if location_elem else 'Remote'
+                
+                link_elem = row.find('a', class_='preventLink')
+                link = f"https://remoteok.com{link_elem['href']}" if link_elem else 'N/A'
+                
+                jobs.append({
+                    'title': title,
+                    'company': company,
+                    'location': location,
+                    'url': link,
+                    'source': 'RemoteOK'
+                })
+                
+                if len(jobs) >= limit:
+                    break
+                    
+            except Exception as e:
+                print(f"Error: {e}")
+                continue
+        
+        return jobs
+        
+    except Exception as e:
+        return {'error': str(e)}
+
     
 @app.get('/')
 def home():
@@ -169,7 +228,21 @@ def tangina(title: str, location: str = "Metro Manila", total_jobs: int = 20):
         'jobs': jobs
     }
     
+@app.get("/weworkremotely/search")
+def search_jobs(
+    title: str = "",
+    limit: int = 20
+):
+    jobs = scrape_remoteok(title, limit)
     
+    if isinstance(jobs, dict) and 'error' in jobs:
+        return jobs
+    
+    return {
+        'query': title,
+        'count': len(jobs),
+        'jobs': jobs
+    }
 
 @app.get('/indeed/search')
 def indeed(
