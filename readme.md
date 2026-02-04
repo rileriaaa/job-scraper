@@ -1,3 +1,6 @@
 job-scraper amp
 
-uvicorn main:app --reload
+run locally:
+uvicorn {file name}:app --reload
+
+args format:
