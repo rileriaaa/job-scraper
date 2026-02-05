@@ -155,8 +155,6 @@ def jobstreet_jobs(title, location, total_jobs):
         driver.quit()
         return {'error': str(e)}
     
-    
-
 
 def scrape_remoteok(search_term="", limit=20):
     url = 'https://remoteok.com/remote-jobs'
@@ -212,12 +210,78 @@ def scrape_remoteok(search_term="", limit=20):
         
     except Exception as e:
         return {'error': str(e)}
+    
+def wellfound_jobs(title, total_jobs):
+    jobs = []
+    page = 1
+    
+    encoded_title = title.replace(" ", "-")
+
+    try:
+        while len(jobs) < total_jobs:
+            url = f'https://wellfound.com/role/l/{encoded_title}/philippines?page={page}'
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            job_cards = soup.find_all("div", class_='mb-6 w-full rounded border border-gray-400 bg-white')
+            
+            if not job_cards:
+                break
+            
+            for job in job_cards:
+                try:
+                    company = job.find("h2", class_='inline text-md font-semibold').text.strip()
+                    jobTitle = job.find("a", class_='mr-2 text-sm font-semibold text-brand-burgandy hover:underline').text.strip()
+                    
+                    info_spans = job.find_all("span", class_='pl-1 text-xs')
+                    salary = info_spans[0].text.strip() if len(info_spans) > 0 else "N/A"
+                    location = info_spans[1].text.strip() if len(info_spans) > 1 else "N/A"
+                    
+                    link = job.find("a", class_='mr-2 text-sm font-semibold text-brand-burgandy hover:underline')['href']
+                    
+                    jobs.append({
+                        'title': jobTitle,
+                        'company': company,
+                        'salary': salary,
+                        'location': location,
+                        'url': f"https://wellfound.com{link}" if not link.startswith('http') else link
+                    })
+                    
+                    if len(jobs) >= total_jobs:
+                        break
+                    
+                except Exception as e:
+                    continue
+            
+            if len(jobs) >= total_jobs:
+                break
+                
+            page += 1  
+            time.sleep(1) 
+    
+        return jobs
+    
+    except Exception as e:
+        return {'error': str(e)}
 
     
 @app.get('/')
 def home():
     return{
         'message': 'Job Scraper API - /help/help - to see all directories'
+    }
+    
+@app.get('/wellfound/search')
+def tangina(title: str, total_jobs: int = 20):
+    jobs = wellfound_jobs(title, total_jobs)
+    return {
+        'count': len(jobs),
+        'jobs': jobs
     }
     
 @app.get('/jobstreet/search')
